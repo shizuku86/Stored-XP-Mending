@@ -6,7 +6,7 @@
 		]
 	},
 	"header": {
-		"name": "Hold Exp Mending",
+		"name": "Stored XP Mending ver.1.0.0",
 		"description": "保持している経験値から手に持っているアイテムを修繕します",
 		"min_engine_version": [
 			1,

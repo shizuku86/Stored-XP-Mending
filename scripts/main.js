@@ -1,38 +1,57 @@
 import { world, system } from "@minecraft/server";
 
+const equipmentSlots = [
+    "Mainhand",
+    "Offhand",
+    "Head",
+    "Chest",
+    "Feet",
+    "Legs"
+]
+
 system.runInterval(() => {
     const players = world.getPlayers();
 
     players.forEach((player) => {
-        const container = player.getComponent("inventory").container;
         const equippable = player.getComponent("equippable");
 
-        const rightHandItem = container.getItem(player.selectedSlotIndex);
-        const leftHandITem = equippable.getEquipment("Offhand");
-        
-        if (rightHandItem) {
-            const durability = rightHandItem.getComponent("minecraft:durability");
-            const enchantable = rightHandItem.getComponent("minecraft:enchantable");
-            if (!durability || !enchantable) return;
+        const tools = equipmentSlots.map(equip => equippable.getEquipment(equip));
 
-            const hasMending = enchantable.hasEnchantment("minecraft:mending");
-            const currentDurability = durability?.maxDurability - durability?.damage;
-            
-            if (hasMending && currentDurability < durability.maxDurability && player.getTotalXp() > 0) {
-                const a = player.getTotalXp();
-                player.addExperience(-1);
-                if (player.getTotalXp() > 0 && player.getTotalXp() === a) {
-                    player.addLevels(-1);
-                    const b = player.totalXpNeededForNextLevel -1;
-                    const c = player.getTotalXp();
-                    player.resetLevel();
-                    player.addExperience(b);
-                    player.addExperience(c);
+        for (let i = 0; i < 10; i++) {
+            tools.forEach((tool, index) => {
+                if (mendingTool(player, tool)) {
+                    equippable.setEquipment(equipmentSlots[index]);
                 }
-
-                durability.damage -= 1;
-                container.setItem(player.selectedSlotIndex, rightHandItem);
-            }
+            });
         }
     });
 });
+
+function mendingTool(player, tool) {
+    const durability = tool.getComponent("minecraft:durability");
+    const enchantable = tool.getComponent("minecraft:enchantable");
+    if (!durability || !enchantable) return false;
+
+    const hasMending = enchantable.hasEnchantment("minecraft:mending");
+    if (!hasMending) return false;
+    
+    const beforeTotalXp = player.getTotalXp();
+    if (durability.damage > 0 && beforeTotalXp > 0) {
+        player.addExperience(-1);
+        durability.damage = Math.max(durability.damage -2, 0);
+
+        const afterTotalXp = player.getTotalXp();
+        if (afterTotalXp > 0 && afterTotalXp === totalXp) {
+            player.addLevel();
+            const beforeTotalXpNeededForNextLevel = player.totalXpNeededForNextLevel;
+            const beforeTotalXp = player.getTotalXp();
+            player.resetLevel();
+
+            player.addExperience(beforeTotalXpNeededForNextLevel + beforeTotalXp)
+        }
+
+        return true;
+    }
+
+    return false;
+}
