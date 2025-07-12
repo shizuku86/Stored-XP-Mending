@@ -11,10 +11,34 @@ const equipmentSlots = [
 
 const mendingIntervals = equipmentSlots.map(() => 0);
 
+world.beforeEvents.playerInteractWithBlock.subscribe(ev => {
+    const { block, isFirstEvent, itemStack, player } = ev;
+
+    if (!isFirstEvent) return;
+    if (!player.isSneaking) return;
+    if (block.typeId !== "minecraft:grindstone") return;
+    if (!itemStack) return;
+
+    const durability = itemStack.getComponent("minecraft:durability");
+    const enchantable = itemStack.getComponent("minecraft:enchantable");
+    if (!durability || !enchantable) return;
+
+    ev.cancel = true;
+    player.playSound("block.grindstone.use");
+    player.setDynamicProperty("isMending", true);
+    player.setDynamicProperty("mendingSlot", player.selectedSlotIndex);
+});
+
 system.runInterval(() => {
     const players = world.getPlayers();
 
     players.forEach((player) => {
+        if (!player.getDynamicProperty("isMending")) return;
+        if (player.getDynamicProperty("mendingSlot") !== player.selectedSlotIndex) {
+            player.setDynamicProperty("isMending", false);
+            return;
+        }
+
         const equippable = player.getComponent("equippable");
         const tools = equipmentSlots.map(equip => equippable.getEquipment(equip));
         const intervals = JSON.parse(player.getDynamicProperty("mendingIntervals") ?? JSON.stringify(mendingIntervals));
