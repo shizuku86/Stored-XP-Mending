@@ -17,10 +17,25 @@ world.beforeEvents.playerInteractWithBlock.subscribe(ev => {
     if (!isFirstEvent) return;
     if (!player.isSneaking) return;
     if (block.typeId !== "minecraft:grindstone") return;
-    if (!itemStack) return;
     if (!isTool(itemStack)) return;
 
     ev.cancel = true;
+    system.run(() => player.playSound("block.grindstone.use"));
+    player.setDynamicProperty("isMending", true);
+    player.setDynamicProperty("mendingSlot", player.selectedSlotIndex);
+});
+
+world.afterEvents.entityHitBlock.subscribe(ev => {
+    const { hitBlock, damagingEntity } = ev;
+
+    if (damagingEntity.typeId !== "minecraft:player") return;
+    if (!damagingEntity.isSneaking) return;
+    if (hitBlock.typeId !== "minecraft:grindstone") return;
+
+    const container = damagingEntity.getComponent("inventory").container;
+    const itemStack = container.getItem(damagingEntity.selectedSlotIndex);
+    if (!isTool(itemStack)) return;
+
     system.run(() => player.playSound("block.grindstone.use"));
     player.setDynamicProperty("isMending", true);
     player.setDynamicProperty("mendingSlot", player.selectedSlotIndex);
@@ -97,6 +112,7 @@ function mendingTool(player, tool) {
 }
 
 function isTool(itemStack) {
+    if (!itemStack) return false;
     const durability = itemStack.getComponent("minecraft:durability");
     const enchantable = itemStack.getComponent("minecraft:enchantable");
     if (!durability || !enchantable) return false;
