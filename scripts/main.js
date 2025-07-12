@@ -17,7 +17,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe(ev => {
     if (!isFirstEvent) return;
     if (!player.isSneaking) return;
     if (block.typeId !== "minecraft:grindstone") return;
-    if (!isTool(itemStack)) return;
+    if (!isMendingTool(itemStack)) return;
 
     ev.cancel = true;
     system.run(() => player.playSound("block.grindstone.use"));
@@ -34,11 +34,11 @@ world.afterEvents.entityHitBlock.subscribe(ev => {
 
     const container = damagingEntity.getComponent("inventory").container;
     const itemStack = container.getItem(damagingEntity.selectedSlotIndex);
-    if (!isTool(itemStack)) return;
+    if (!isMendingTool(itemStack)) return;
 
-    system.run(() => player.playSound("block.grindstone.use"));
-    player.setDynamicProperty("isMending", true);
-    player.setDynamicProperty("mendingSlot", player.selectedSlotIndex);
+    system.run(() => damagingEntity.playSound("block.grindstone.use"));
+    damagingEntity.setDynamicProperty("isMending", true);
+    damagingEntity.setDynamicProperty("mendingSlot", damagingEntity.selectedSlotIndex);
 });
 
 system.runInterval(() => {
@@ -49,7 +49,7 @@ system.runInterval(() => {
         if (player.getDynamicProperty("mendingSlot") !== player.selectedSlotIndex) {
             const container = player.getComponent("inventory").container;
             const itemStack = container.getItem(player.selectedSlotIndex);
-            if (isTool(itemStack)) {
+            if (isMendingTool(itemStack)) {
                 player.setDynamicProperty("mendingSlot", player.selectedSlotIndex);
             }
             else {
@@ -111,10 +111,14 @@ function mendingTool(player, tool) {
     return true;
 }
 
-function isTool(itemStack) {
+function isMendingTool(itemStack) {
     if (!itemStack) return false;
     const durability = itemStack.getComponent("minecraft:durability");
     const enchantable = itemStack.getComponent("minecraft:enchantable");
     if (!durability || !enchantable) return false;
+
+    const hasMending = enchantable.hasEnchantment("minecraft:mending");
+    if (!hasMending) return false;
+    
     return true;
 }
