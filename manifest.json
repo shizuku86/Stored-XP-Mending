@@ -1,0 +1,46 @@
+{
+	"format_version": 2,
+	"metadata": {
+		"authors": [
+			"静空"
+		]
+	},
+	"header": {
+		"name": "Hold Exp Mending",
+		"description": "保持している経験値から手に持っているアイテムを修繕します",
+		"min_engine_version": [
+			1,
+			21,
+			20
+		],
+		"uuid": "001146a0-c8c7-431c-96d7-717ac258db4b",
+		"version": [
+			1,
+			0,
+			0
+		]
+	},
+	"modules": [
+		{
+			"type": "script",
+			"language": "javascript",
+			"uuid": "7ee09b94-28e1-4c16-a344-cd86ede2f6e9",
+			"entry": "scripts/main.js",
+			"version": [
+				1,
+				0,
+				0
+			]
+		}
+	],
+	"dependencies": [
+        {
+            "uuid" : "db9ca554-99e4-4b22-9efd-6d9a4525e381",
+            "version" : [1,0,0]
+        },
+		{
+			"module_name": "@minecraft/server",
+			"version": "2.0.0"
+		}
+	]
+}
