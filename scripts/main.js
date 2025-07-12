@@ -45,7 +45,7 @@ function mendingTool(player, tool) {
     const hasMending = enchantable.hasEnchantment("minecraft:mending");
     if (!hasMending) return false;
     
-    const maxMendingCount = 10;
+    const maxMendingCount = 5;
     for (let i = 0; i< maxMendingCount; i++) {
         const beforeTotalXp = player.getTotalXp();
         if (durability.damage === 0 || beforeTotalXp === 0) return false;
