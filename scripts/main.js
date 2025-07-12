@@ -22,11 +22,12 @@ system.runInterval(() => {
         tools.forEach((tool, index) => {
             if (intervals[index] > 0) {
                 intervals[index] -= 1;
+                return;
             }
 
             if (mendingTool(player, tool)) {
                 equippable.setEquipment(equipmentSlots[index], tool);
-                intervals[index] = 5;
+                intervals[index] = Math.ceil(Math.random() * 3);
             }
         });
 
@@ -35,6 +36,8 @@ system.runInterval(() => {
 });
 
 function mendingTool(player, tool) {
+    if (!tool) return false;
+
     const durability = tool.getComponent("minecraft:durability");
     const enchantable = tool.getComponent("minecraft:enchantable");
     if (!durability || !enchantable) return false;
@@ -42,14 +45,15 @@ function mendingTool(player, tool) {
     const hasMending = enchantable.hasEnchantment("minecraft:mending");
     if (!hasMending) return false;
     
-    const beforeTotalXp = player.getTotalXp();
-    if (durability.damage > 0 && beforeTotalXp > 0) {
+    const maxMendingCount = 10;
+    for (let i = 0; i< maxMendingCount; i++) {
+        const beforeTotalXp = player.getTotalXp();
+        if (durability.damage === 0 || beforeTotalXp === 0) return false;
         player.addExperience(-1);
-        durability.damage = Math.max(durability.damage -2, 0);
 
         const afterTotalXp = player.getTotalXp();
         if (afterTotalXp > 0 && beforeTotalXp === afterTotalXp && player.level > 0) {
-            player.addLevel(-1);
+            player.addLevels(-1);
             const totalXpNeededForNextLevel = player.totalXpNeededForNextLevel -1;
             const totalXp = player.getTotalXp();
             player.resetLevel();
@@ -57,8 +61,9 @@ function mendingTool(player, tool) {
             player.addExperience(totalXpNeededForNextLevel + totalXp);
         }
 
-        return true;
+        durability.damage = Math.max(durability.damage -2, 0);
+        if (durability.damage === 0 || beforeTotalXp === 0) break;
     }
 
-    return false;
+    return true;
 }
