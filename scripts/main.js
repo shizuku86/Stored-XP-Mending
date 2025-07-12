@@ -16,19 +16,21 @@ system.runInterval(() => {
 
     players.forEach((player) => {
         const equippable = player.getComponent("equippable");
-
         const tools = equipmentSlots.map(equip => equippable.getEquipment(equip));
+        const intervals = JSON.parse(player.getDynamicProperty("mendingIntervals") ?? JSON.stringify(mendingIntervals));
 
         tools.forEach((tool, index) => {
-            if (mendingIntervals[index] > 0) {
-                mendingIntervals[index] -= 1;
+            if (intervals[index] > 0) {
+                intervals[index] -= 1;
             }
 
             if (mendingTool(player, tool)) {
                 equippable.setEquipment(equipmentSlots[index], tool);
-                mendingIntervals[index] = 5;
+                intervals[index] = 5;
             }
         });
+
+        player.setDynamicProperty("mendingIntervals", JSON.stringify(intervals));
     });
 });
 
