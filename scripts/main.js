@@ -42,12 +42,12 @@ function mendingTool(player, tool) {
 
         const afterTotalXp = player.getTotalXp();
         if (afterTotalXp > 0 && afterTotalXp === totalXp) {
-            player.addLevel();
-            const beforeTotalXpNeededForNextLevel = player.totalXpNeededForNextLevel;
-            const beforeTotalXp = player.getTotalXp();
+            player.addLevel(-1);
+            const totalXpNeededForNextLevel = player.totalXpNeededForNextLevel -1;
+            const totalXp = player.getTotalXp();
             player.resetLevel();
 
-            player.addExperience(beforeTotalXpNeededForNextLevel + beforeTotalXp)
+            player.addExperience(totalXpNeededForNextLevel + totalXp);
         }
 
         return true;
