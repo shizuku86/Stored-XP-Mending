@@ -9,58 +9,78 @@ const equipmentSlots = [
     "Legs"
 ]
 
-const mendingIntervals = equipmentSlots.map(() => 0);
+const mendingId = "minecraft:mending";
+const triggerBlockId = "minecraft:grindstone";
+
+function initData() {
+    return {
+        "isMending": false,
+        "mendingSlot": 0,
+        "mendingIntervals": equipmentSlots.map(() => 0)
+    }
+}
+
+const playerMap = new Map();
 
 world.beforeEvents.playerInteractWithBlock.subscribe(ev => {
     const { block, isFirstEvent, itemStack, player } = ev;
 
     if (!isFirstEvent) return;
-    if (!player.isSneaking) return;
-    if (block.typeId !== "minecraft:grindstone") return;
-    if (!isMendingTool(itemStack)) return;
-
+    if (!mendingTrigger(player, block)) return;
+    
     ev.cancel = true;
-    system.run(() => player.playSound("block.grindstone.use"));
-    player.setDynamicProperty("isMending", true);
-    player.setDynamicProperty("mendingSlot", player.selectedSlotIndex);
 });
 
 world.afterEvents.entityHitBlock.subscribe(ev => {
     const { hitBlock, damagingEntity } = ev;
 
     if (damagingEntity.typeId !== "minecraft:player") return;
-    if (!damagingEntity.isSneaking) return;
-    if (hitBlock.typeId !== "minecraft:grindstone") return;
-
-    const container = damagingEntity.getComponent("inventory").container;
-    const itemStack = container.getItem(damagingEntity.selectedSlotIndex);
-    if (!isMendingTool(itemStack)) return;
-
-    system.run(() => damagingEntity.playSound("block.grindstone.use"));
-    damagingEntity.setDynamicProperty("isMending", true);
-    damagingEntity.setDynamicProperty("mendingSlot", damagingEntity.selectedSlotIndex);
+    mendingTrigger(damagingEntity, hitBlock);
 });
+
+world.afterEvents.playerLeave.subscribe(ev => {
+    playerMap.delete(ev.playerId);
+});
+
+function mendingTrigger(player, block) {
+    if (block.typeId !== triggerBlockId) return false;
+    if (!player.isSneaking) return false;
+
+    const container = player.getComponent("inventory").container;
+    const itemStack = container.getItem(player.selectedSlotIndex);
+    if (!isMendingTool(itemStack)) return false;
+
+    system.run(() => player.playSound("block.grindstone.use"));
+    const playerData = playerMap.get(player.id) ?? initData();
+    playerData.isMending = true;
+    playerData.mendingSlot = player.selectedSlotIndex;
+    playerMap.set(player.id, playerData);
+
+    return true;
+}
 
 system.runInterval(() => {
     const players = world.getPlayers();
-
     players.forEach((player) => {
-        if (!player.getDynamicProperty("isMending")) return;
-        if (player.getDynamicProperty("mendingSlot") !== player.selectedSlotIndex) {
+        const playerData = playerMap.get(player.id) ?? initData();
+        playerMap.set(player.id, playerData);
+
+        if (!playerData.isMending) return;
+        if (playerData.mendingSlot !== player.selectedSlotIndex) {
             const container = player.getComponent("inventory").container;
             const itemStack = container.getItem(player.selectedSlotIndex);
             if (isMendingTool(itemStack)) {
-                player.setDynamicProperty("mendingSlot", player.selectedSlotIndex);
+                playerData.mendingSlot = player.selectedSlotIndex;
             }
             else {
-                player.setDynamicProperty("isMending", false);
+                playerData.isMending = false;
                 return;
             }
         }
 
         const equippable = player.getComponent("equippable");
         const tools = equipmentSlots.map(equip => equippable.getEquipment(equip));
-        const intervals = JSON.parse(player.getDynamicProperty("mendingIntervals") ?? JSON.stringify(mendingIntervals));
+        const intervals = playerData.mendingIntervals;
 
         tools.forEach((tool, index) => {
             if (intervals[index] > 0) {
@@ -73,8 +93,6 @@ system.runInterval(() => {
                 intervals[index] = Math.ceil(Math.random() * 3);
             }
         });
-
-        player.setDynamicProperty("mendingIntervals", JSON.stringify(intervals));
     });
 });
 
@@ -85,7 +103,7 @@ function mendingTool(player, tool) {
     const enchantable = tool.getComponent("minecraft:enchantable");
     if (!durability || !enchantable) return false;
 
-    const hasMending = enchantable.hasEnchantment("minecraft:mending");
+    const hasMending = enchantable.hasEnchantment(mendingId);
     if (!hasMending) return false;
     
     const maxMendingCount = 5;
@@ -117,8 +135,8 @@ function isMendingTool(itemStack) {
     const enchantable = itemStack.getComponent("minecraft:enchantable");
     if (!durability || !enchantable) return false;
 
-    const hasMending = enchantable.hasEnchantment("minecraft:mending");
+    const hasMending = enchantable.hasEnchantment(mendingId);
     if (!hasMending) return false;
-    
+
     return true;
 }
