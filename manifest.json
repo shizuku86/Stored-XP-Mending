@@ -6,7 +6,7 @@
 		]
 	},
 	"header": {
-		"name": "Stored XP Mending ver.1.0.0",
+		"name": "Stored XP Mending ver.1.1.0",
 		"description": "保持している経験値から手に持っているアイテムを修繕します",
 		"min_engine_version": [
 			1,
@@ -16,7 +16,7 @@
 		"uuid": "001146a0-c8c7-431c-96d7-717ac258db4b",
 		"version": [
 			1,
-			0,
+			1,
 			0
 		]
 	},
@@ -28,16 +28,12 @@
 			"entry": "scripts/main.js",
 			"version": [
 				1,
-				0,
+				1,
 				0
 			]
 		}
 	],
 	"dependencies": [
-        {
-            "uuid" : "db9ca554-99e4-4b22-9efd-6d9a4525e381",
-            "version" : [1,0,0]
-        },
 		{
 			"module_name": "@minecraft/server",
 			"version": "2.0.0"
